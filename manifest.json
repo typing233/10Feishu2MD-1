@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Feishu2MD - 飞书文档转 Markdown",
+  "version": "1.0.0",
+  "description": "一键将飞书文档转换为 Markdown 格式，支持下载和复制到剪贴板",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "https://*.feishu.cn/*",
+    "https://*.larksuite.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.feishu.cn/docx/*",
+        "https://*.feishu.cn/docs/*",
+        "https://*.feishu.cn/wiki/*",
+        "https://*.feishu.cn/space/*",
+        "https://*.larksuite.com/docx/*",
+        "https://*.larksuite.com/docs/*",
+        "https://*.larksuite.com/wiki/*",
+        "https://*.larksuite.com/space/*"
+      ],
+      "js": ["converter.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
