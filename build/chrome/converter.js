@@ -125,13 +125,27 @@ const Feishu2MDConverter = (() => {
 
   // --- Inline formatting extraction ---
 
+  function escapeInlinePlainText(text) {
+    // Escape characters that could accidentally trigger markdown formatting.
+    // Order matters: escape backslash first to avoid double-escaping.
+    return text
+      .replace(/\\/g, '\\\\')
+      .replace(/\*/g, '\\*')
+      .replace(/_/g, '\\_')
+      .replace(/`/g, '\\`')
+      .replace(/\[/g, '\\[')
+      .replace(/\]/g, '\\]')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\|/g, '\\|');
+  }
+
   function extractInlineFormatting(node, insideCode = false) {
     if (!node) return '';
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent || '';
-      // Don't escape text inside code elements
       if (insideCode) return text;
-      return text;
+      return escapeInlinePlainText(text);
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
@@ -649,12 +663,17 @@ const Feishu2MDConverter = (() => {
         let content = el.text_run.content || '';
         if (content === '\n' && elements.length === 1) return ''; // Empty block
         const style = el.text_run.text_element_style || {};
+        const hasFormatting = style.inline_code || style.bold || style.italic ||
+                             style.strikethrough || style.link;
 
         // Apply formatting in correct order: innermost first
         if (style.inline_code) {
           content = escapeCodeContent(content);
         } else {
-          // Only apply other formatting if not code
+          // Escape plain text that has no formatting to prevent markdown interpretation
+          if (!hasFormatting) {
+            content = escapeInlinePlainText(content);
+          }
           if (style.bold && style.italic) {
             content = `***${content}***`;
           } else if (style.bold) {
@@ -801,6 +820,7 @@ const Feishu2MDConverter = (() => {
     extractInlineFormatting,
     escapeTableCell,
     escapeCodeContent,
+    escapeInlinePlainText,
     escapeLinkText,
     escapeLinkUrl,
     trimLines
